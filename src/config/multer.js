@@ -1,10 +1,12 @@
 const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
+const aws = require("aws-sdk");
+//const multerS3 = require("multer-s3");
 
-module.exports = {
-  dest: path.resolve(__dirname, "..", "..", "tmp", "uploads"),
-  storage: multer.diskStorage({
+
+const storageTypes = {
+  local: multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, path.resolve(__dirname, "..", "..", "tmp", "uploads"));
     },
@@ -17,7 +19,16 @@ module.exports = {
         cb(null, file.key);
       });
     }
-  }),
+  })
+};
+
+
+module.exports = {
+  dest: path.resolve(__dirname, "..", "..", "tmp", "uploads"),
+  storage: storageTypes[process.env.STORAGE_TYPE],
+  limits: {
+    fileSize: 2 * 1024 * 1024
+  },
   limits: {
     fileSize: 2 * 1024 * 1024
   },
@@ -32,7 +43,7 @@ module.exports = {
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Invalid file type."));
+      cb(new Error("Invalid image format!"));
     }
   }
 };
